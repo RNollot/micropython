@@ -200,6 +200,11 @@ STATIC bool is_adcx_channel(int channel) {
     #elif defined(STM32H7)
     return __HAL_ADC_IS_CHANNEL_INTERNAL(channel)
            || IS_ADC_CHANNEL(__HAL_ADC_DECIMAL_NB_TO_CHANNEL(channel));
+    #elif defined(STM32WB)
+    ADC_HandleTypeDef handle;
+    handle.Instance = ADCx;
+    return __HAL_ADC_IS_CHANNEL_INTERNAL(channel)
+           || IS_ADC_CHANNEL(&handle, __HAL_ADC_DECIMAL_NB_TO_CHANNEL(channel));
     #elif defined(STM32L4)
     ADC_HandleTypeDef handle;
     handle.Instance = ADCx;

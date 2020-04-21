@@ -574,7 +574,9 @@ TEXT0_SECTIONS ?= .isr_vector .text .data
 
 deploy-stlink: $(BUILD)/firmware.dfu
 	$(ECHO) "Writing $(BUILD)/firmware.bin to the board via ST-LINK"
-	$(Q)$(STFLASH) write $(BUILD)/firmware.bin $(TEXT0_ADDR)
+	STM32_Programmer.sh -c port=SWD -hardRst
+	STM32_Programmer.sh -c port=SWD -rdu
+	STM32_Programmer.sh -c port=SWD -w $(BUILD)/firmware.bin 0x8000000 --start
 
 deploy-openocd: $(BUILD)/firmware.dfu
 	$(ECHO) "Writing $(BUILD)/firmware.bin to the board via ST-LINK using OpenOCD"
@@ -592,10 +594,10 @@ TEXT0_SECTIONS ?= .isr_vector
 TEXT1_SECTIONS ?= .text .data
 
 deploy-stlink: $(BUILD)/firmware.dfu
-	$(ECHO) "Writing $(BUILD)/firmware0.bin to the board via ST-LINK"
-	$(Q)$(STFLASH) write $(BUILD)/firmware0.bin $(TEXT0_ADDR)
-	$(ECHO) "Writing $(BUILD)/firmware1.bin to the board via ST-LINK"
-	$(Q)$(STFLASH) --reset write $(BUILD)/firmware1.bin $(TEXT1_ADDR)
+	$(ECHO) "Writing $(BUILD)/firmware.bin to the board via ST-LINK"
+	STM32_Programmer.sh -c port=SWD -hardRst
+	STM32_Programmer.sh -c port=SWD -rdu
+	STM32_Programmer.sh -c port=SWD -w $(BUILD)/firmware.bin 0x8000000 --start
 
 deploy-openocd: $(BUILD)/firmware.dfu
 	$(ECHO) "Writing $(BUILD)/firmware{0,1}.bin to the board via ST-LINK using OpenOCD"
