@@ -294,8 +294,6 @@ STATIC void adcx_init_periph(ADC_HandleTypeDef *adch, uint32_t resolution) {
     #if defined(STM32L4) || defined(STM32WB)
     HAL_ADCEx_Calibration_Start(adch, ADC_SINGLE_ENDED);
     #endif
-
-    printf("Init ADC DOne \n");
 }
 
 STATIC void adc_init_single(pyb_obj_adc_t *adc_obj) {
@@ -375,9 +373,6 @@ STATIC uint32_t adc_read_channel(ADC_HandleTypeDef *adcHandle) {
 }
 
 STATIC uint32_t adc_config_and_read_channel(ADC_HandleTypeDef *adcHandle, uint32_t channel) {
-    // #if defined(STM32WB)
-    // channel = __HAL_ADC_DECIMAL_NB_TO_CHANNEL(channel);
-    // #endif
     adc_config_channel(adcHandle, channel);
     uint32_t raw_value = adc_read_channel(adcHandle);
 
