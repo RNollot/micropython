@@ -149,6 +149,7 @@ void SystemClock_Config(void) {
         | __HAL_RCC_CRS_RELOADVALUE_CALCULATE(48000000, 1000) << CRS_CFGR_RELOAD_Pos;
     #endif
     #endif
+        
 }
 
 #elif defined(STM32WB)
@@ -190,6 +191,16 @@ void SystemClock_Config(void) {
 
     // Select PLLQ as 48MHz source for USB and RNG
     RCC->CCIPR = 2 << RCC_CCIPR_CLK48SEL_Pos;
+
+
+    RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
+
+    PeriphClkInitStruct.PeriphClockSelection    = RCC_PERIPHCLK_ADC;
+    PeriphClkInitStruct.AdcClockSelection       = RCC_ADCCLKSOURCE_SYSCLK;
+    
+    if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
+    {
+    }    
 
     SystemCoreClockUpdate();
     powerctrl_config_systick();
