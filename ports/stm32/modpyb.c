@@ -56,6 +56,8 @@
 #include "extmod/vfs.h"
 #include "extmod/utime_mphal.h"
 
+#include "sai.h"
+
 char pyb_country_code[2];
 
 STATIC mp_obj_t pyb_fault_debug(mp_obj_t value) {
@@ -210,6 +212,8 @@ STATIC const mp_rom_map_elem_t pyb_module_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR_servo), MP_ROM_PTR(&pyb_servo_set_obj) },
     { MP_ROM_QSTR(MP_QSTR_Servo), MP_ROM_PTR(&pyb_servo_type) },
     #endif
+
+    { MP_ROM_QSTR(MP_QSTR_Sai), MP_ROM_PTR(&pyb_sai_type) },
 
     #if MICROPY_HW_HAS_SWITCH
     { MP_ROM_QSTR(MP_QSTR_Switch), MP_ROM_PTR(&pyb_switch_type) },
