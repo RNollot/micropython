@@ -41,6 +41,7 @@
 #include "stm32wbxx_hal_tim.h"
 #include "stm32wbxx_hal_uart.h"
 #include "stm32wbxx_hal_usart.h"
+#include "stm32wbxx_hal_sai.h"
 
 // Enable various HAL modules
 #define HAL_MODULE_ENABLED
@@ -58,6 +59,7 @@
 #define HAL_TIM_MODULE_ENABLED
 #define HAL_UART_MODULE_ENABLED
 #define HAL_USART_MODULE_ENABLED
+#define HAL_SAI_MODULE_ENABLED
 
 // Oscillator values in Hz
 #define MSI_VALUE   (4000000)

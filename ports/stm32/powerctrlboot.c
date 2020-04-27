@@ -150,7 +150,7 @@ void SystemClock_Config(void) {
         | __HAL_RCC_CRS_RELOADVALUE_CALCULATE(48000000, 1000) << CRS_CFGR_RELOAD_Pos;
     #endif
     #endif
-        
+
 }
 
 #elif defined(STM32WB)
@@ -164,58 +164,74 @@ void SystemClock_Config(void) {
 
 void SystemClock_Config(void) {
     // Enable the 32MHz external oscillator
-    RCC->CR |= RCC_CR_HSEON;
-    while (!(RCC->CR & RCC_CR_HSERDY)) {
-    }
-
-    // Prevent CPU2 from disabling CLK48.
-    while (LL_HSEM_1StepLock(HSEM, CLK48_SEMID)) {
-    }
-
-    // Use HSE and the PLL to get a 64MHz SYSCLK
-    #define PLLM (HSE_VALUE / 8000000) // VCO input is 8MHz
-    #define PLLN (24) // 24*8MHz = 192MHz
-    #define PLLQ (4) // f_Q = 48MHz
-    #define PLLR (3) // f_R = 64MHz
-    RCC->PLLCFGR =
-        (PLLR - 1) << RCC_PLLCFGR_PLLR_Pos | RCC_PLLCFGR_PLLREN
-            | (PLLQ - 1) << RCC_PLLCFGR_PLLQ_Pos | RCC_PLLCFGR_PLLQEN
-            | PLLN << RCC_PLLCFGR_PLLN_Pos
-            | (PLLM - 1) << RCC_PLLCFGR_PLLM_Pos
-            | 3 << RCC_PLLCFGR_PLLSRC_Pos;
-    RCC->CR |= RCC_CR_PLLON;
-    while (!(RCC->CR & RCC_CR_PLLRDY)) {
-        // Wait for PLL to lock
-    }
-    const uint32_t sysclk_src = 3;
-
-    // Set divider for HCLK2 to 2 so f_HCLK2 = 32MHz
-    RCC->EXTCFGR = 8 << RCC_EXTCFGR_C2HPRE_Pos;
-
-    // Set flash latency to 3 because SYSCLK > 54MHz
-    FLASH->ACR |= 3 << FLASH_ACR_LATENCY_Pos;
-
-    // Select SYSCLK source
-    RCC->CFGR |= sysclk_src << RCC_CFGR_SW_Pos;
-    while (((RCC->CFGR >> RCC_CFGR_SWS_Pos) & 0x3) != sysclk_src) {
-        // Wait for SYSCLK source to change
-    }
-
-    // Select PLLQ as 48MHz source for USB and RNG
-    RCC->CCIPR = 2 << RCC_CCIPR_CLK48SEL_Pos;
 
 
+    RCC_OscInitTypeDef RCC_OscInitStruct = {0};
+    RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
     RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
 
-    PeriphClkInitStruct.PeriphClockSelection    = RCC_PERIPHCLK_ADC;
+    /** Configure the main internal regulator output voltage 
+    */
+    __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
+    /** Initializes the CPU, AHB and APB busses clocks 
+    */
+    RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI48|RCC_OSCILLATORTYPE_HSI
+                  |RCC_OSCILLATORTYPE_HSE;
+    RCC_OscInitStruct.HSEState = RCC_HSE_ON;
+    RCC_OscInitStruct.HSIState = RCC_HSI_ON;
+    RCC_OscInitStruct.HSI48State = RCC_HSI48_ON;
+    RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
+    RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+    RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
+    RCC_OscInitStruct.PLL.PLLM = RCC_PLLM_DIV8;
+    RCC_OscInitStruct.PLL.PLLN = 32;
+    RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
+    RCC_OscInitStruct.PLL.PLLR = RCC_PLLR_DIV2;
+    RCC_OscInitStruct.PLL.PLLQ = RCC_PLLQ_DIV2;
+    if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
+    {
+    }
+    /** Configure the SYSCLKSource, HCLK, PCLK1 and PCLK2 clocks dividers 
+    */
+    RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK4|RCC_CLOCKTYPE_HCLK2
+                  |RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
+                  |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
+    RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
+    RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
+    RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
+    RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
+    RCC_ClkInitStruct.AHBCLK2Divider = RCC_SYSCLK_DIV2;
+    RCC_ClkInitStruct.AHBCLK4Divider = RCC_SYSCLK_DIV1;
+
+    if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_3) != HAL_OK)
+    {
+    }
+
+    PeriphClkInitStruct.PeriphClockSelection    = RCC_PERIPHCLK_ADC \
+                                        | RCC_PERIPHCLK_SMPS \
+                                        | RCC_PERIPHCLK_SAI1 \
+                                        | RCC_PERIPHCLK_USB;
+
+    PeriphClkInitStruct.PLLSAI1.PLLN = 86;
+    PeriphClkInitStruct.PLLSAI1.PLLP = RCC_PLLP_DIV7;
+    PeriphClkInitStruct.PLLSAI1.PLLQ = RCC_PLLQ_DIV2;
+    PeriphClkInitStruct.PLLSAI1.PLLR = RCC_PLLR_DIV2;
+    PeriphClkInitStruct.PLLSAI1.PLLSAI1ClockOut = RCC_PLLSAI1_SAI1CLK;
+    PeriphClkInitStruct.Sai1ClockSelection = RCC_SAI1CLKSOURCE_PLLSAI1;
+    PeriphClkInitStruct.UsbClockSelection = RCC_USBCLKSOURCE_HSI48;
+    PeriphClkInitStruct.SmpsClockSelection = RCC_SMPSCLKSOURCE_HSE;
+    PeriphClkInitStruct.SmpsDivSelection = RCC_SMPSCLKDIV_RANGE0;
     PeriphClkInitStruct.AdcClockSelection       = RCC_ADCCLKSOURCE_SYSCLK;
-    
+
     if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
     {
     }    
 
-    SystemCoreClockUpdate();
-    powerctrl_config_systick();
+    HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq()/1000);
+    HAL_SYSTICK_CLKSourceConfig(SYSTICK_CLKSOURCE_HCLK);
+    HAL_NVIC_SetPriority(SysTick_IRQn, 0, 0);  
+    HAL_PWREx_EnableVddUSB();
+
 }
 
 #endif
