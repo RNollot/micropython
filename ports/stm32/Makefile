@@ -14,6 +14,7 @@ include ../../py/mkenv.mk
 -include mpconfigport.mk
 include $(BOARD_DIR)/mpconfigboard.mk
 
+DEBUG ?= 1
 # Files that are generated and needed before the QSTR build.
 QSTR_GENERATED_HEADERS = $(BUILD)/pins_qstr.h $(BUILD)/modstm_qstr.h
 
@@ -124,19 +125,20 @@ endif
 
 LDFLAGS = -nostdlib -L $(LD_DIR) $(addprefix -T,$(LD_FILES)) -Map=$(@:.elf=.map) --cref
 LDFLAGS += --defsym=_estack_reserve=8
-LIBS = "$(shell $(CC) $(CFLAGS) -print-libgcc-file-name)"
 
+LIBS = $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
+LIBS +=  -l:libPDMFilter_CM4_GCC_wc32.a -Lboards/$(BOARD)
 # Remove uncalled code from the final image.
 CFLAGS += -fdata-sections -ffunction-sections
 LDFLAGS += --gc-sections
 
 # Debugging/Optimization
-ifeq ($(DEBUG), 1)
 CFLAGS += -g -DPENDSV_DEBUG
-COPT = -O0
-else
-COPT += -Os -DNDEBUG
-endif
+COPT = -Os
+# ifeq ($(DEBUG), 1)
+# else
+# COPT += -Os -DNDEBUG
+# endif
 
 # Options for mpy-cross
 MPY_CROSS_FLAGS += -march=armv7m
@@ -321,6 +323,7 @@ SRC_C += \
 	spibdev.c \
 	storage.c \
 	sdcard.c \
+	spi_sdcard.c \
 	sdram.c \
 	fatfs_port.c \
 	lcd.c \
@@ -355,6 +358,7 @@ endif
 SRC_HAL = $(addprefix $(HAL_DIR)/Src/stm32$(MCU_SERIES)xx_,\
 	hal.c \
 	hal_adc.c \
+	hal_sai.c \
 	hal_adc_ex.c \
 	hal_cortex.c \
 	hal_dma.c \
