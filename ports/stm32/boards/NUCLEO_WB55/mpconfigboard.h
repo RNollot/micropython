@@ -7,12 +7,21 @@
 
 #define MICROPY_PY_PYB_LEGACY       (0)
 
-#define MICROPY_HW_HAS_FLASH        (1)
-#define MICROPY_HW_ENABLE_RTC       (1)
-#define MICROPY_HW_ENABLE_RNG       (1)
-#define MICROPY_HW_ENABLE_ADC       (1)
-#define MICROPY_HW_ENABLE_USB       (1)
-#define MICROPY_HW_HAS_SWITCH       (1)
+#define MICROPY_HW_HAS_FLASH        	(1)
+#define MICROPY_HW_ENABLE_RTC       	(1)
+#define MICROPY_HW_ENABLE_RNG       	(1)
+#define MICROPY_HW_ENABLE_ADC       	(1)
+#define MICROPY_HW_ENABLE_USB       	(1)
+#define MICROPY_HW_HAS_SWITCH       	(1)
+#define MICROPY_HW_ENABLE_SPI_SDCARD    (1)
+#define MICROPY_HW_SDCARD_MOUNT_AT_BOOT	(1)
+
+// SD card detect switch
+#if MICROPY_HW_ENABLE_SPI_SDCARD
+#define MICROPY_HW_SDCARD_DETECT_PIN        (pin_B11)
+#define MICROPY_HW_SDCARD_DETECT_PULL       (GPIO_PULLUP)
+#define MICROPY_HW_SDCARD_DETECT_PRESENT    (0)
+#endif
 
 // There is an external 32kHz oscillator
 #define RTC_ASYNCH_PREDIV           (0)
