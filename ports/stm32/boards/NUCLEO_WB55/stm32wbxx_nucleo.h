@@ -213,16 +213,16 @@ typedef enum
 /**
   * @brief  SD Control Interface pins
   */
-#define SD_CS_PIN                                 GPIO_PIN_10
-#define SD_CS_GPIO_PORT                           GPIOC
+#define SD_CS_PIN                                 GPIO_PIN_4
+#define SD_CS_GPIO_PORT                           GPIOA
 #define SD_CS_GPIO_CLK_ENABLE()                   __HAL_RCC_GPIOC_CLK_ENABLE()
 #define SD_CS_GPIO_CLK_DISABLE()                  __HAL_RCC_GPIOC_CLK_DISABLE()
 
 /**
   * @brief  LCD Control Interface pins
   */
-#define LCD_CS_PIN                                 GPIO_PIN_4
-#define LCD_CS_GPIO_PORT                           GPIOA
+#define LCD_CS_PIN                                 GPIO_PIN_10
+#define LCD_CS_GPIO_PORT                           GPIOC
 #define LCD_CS_GPIO_CLK_ENABLE()                   __HAL_RCC_GPIOA_CLK_ENABLE()
 #define LCD_CS_GPIO_CLK_DISABLE()                  __HAL_RCC_GPIOA_CLK_DISABLE()
 

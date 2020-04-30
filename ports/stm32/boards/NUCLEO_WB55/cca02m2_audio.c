@@ -23,7 +23,6 @@
 /* Includes ------------------------------------------------------------------*/
 #include "cca02m2_audio.h"
 #include "cca02m2_conf.h"
-#include "audio.h"
 #include "stm32wbxx_hal_sai.h"
 #ifndef USE_STM32L4XX_NUCLEO
 #include "arm_math.h"
