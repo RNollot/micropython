@@ -190,9 +190,6 @@ STATIC sd_result_t SD_GoIdleState(void)
 	}
 	while(response.r1 != SD_R1_IN_IDLE_STATE);
 
-	printf( "SD SPI MODE OK");
-
-
 	/* Send CMD8 (SD_CMD_SEND_IF_COND) to check the power supply status
 	and wait until response (R7 Format) equal to 0xAA and */
 	SD_SendCmd(SD_CMD_SEND_IF_COND, 0x1AA, 0x87, SD_ANSWER_R7_EXPECTED, &response);
@@ -270,9 +267,6 @@ STATIC sd_result_t SD_GoIdleState(void)
 		printf("SD Idle State ERROR");
 		return SD_FAILED;
 	}
-
-	printf( "SD Idle State OK");
-
 	return SD_SUCCESS;
 }
 
@@ -586,11 +580,6 @@ uint64_t sdcard_get_capacity_in_bytes(void)
 		sd_handle.CardCapacity *= sd_handle.CardBlockSize;
 		sd_handle.LogBlockNbr = (sd_handle.CardCapacity) / (sd_handle.LogBlockSize);
 	}
-
-	printf("LogBlockSize : %ld", sd_handle.LogBlockSize);
-	printf("CardBlockSize : %ld", sd_handle.CardBlockSize);
-	printf("CardCapacity : %lu", sd_handle.CardCapacity);
-	printf("LogBlockNbr : %ld", sd_handle.LogBlockNbr);
 
 	return sd_handle.CardCapacity;
 }

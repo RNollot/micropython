@@ -28,41 +28,51 @@
 #define PDM_BUFFER_SIZE (((((AUDIO_IN_CHANNELS * AUDIO_IN_SAMPLING_FREQUENCY) / 1000) * MAX_DECIMATION_FACTOR) / 16)* N_MS_PER_INTERRUPT )
 #define PCM_BUFFER_SIZE (((AUDIO_IN_CHANNELS*AUDIO_IN_SAMPLING_FREQUENCY)/1000)  * N_MS_PER_INTERRUPT)
 
-#define RECORDING_TIME      (1000)
-#define QUEUE_SIZE          (50)
 // ------------------------------------------------------------------------------------------------
 // private function macros
 // ------------------------------------------------------------------------------------------------
 
+#define RIFF_HEADER     ({ 'R','I','F','F'})
+#define WAVE_HEADER     ({ "W","A","V","E"})
+#define FMT_HEADER      ({ "F","M","T",""})
+#define DATA_HEADER     ({ "d","a","t","a"})
 
 // ------------------------------------------------------------------------------------------------
 // private typedefs, structures, unions and enums
 // ------------------------------------------------------------------------------------------------
-typedef struct pcm_buffer_t 
-{
-    uint16_t PCM_Buffer[PCM_BUFFER_SIZE];
-}pcm_buffer_t;
 
+#pragma pack(8)
+typedef struct wav_header_t
+{
+    uint8_t     FileTypeBlocID[4];
+    uint32_t    FileSize;
+    char        FileFormatID[4];
+    uint8_t     FormatBlocID[4];
+    uint32_t    BlocSize;
+    uint16_t    AudioFormat;
+    uint16_t    NbrCanaux;
+    uint32_t    Frequence;
+    uint32_t    BytePerSec;
+    uint16_t    BytePerBloc;
+    uint16_t    BitsPerSample;
+    uint8_t     DataBlocID[4];
+    uint32_t    DataSize;
+}wav_header_t;
+#pragma pack(1)
 
 typedef struct pyb_sai_obj_t 
 {
     mp_obj_base_t base;
     uint16_t PDM_Buffer[PDM_BUFFER_SIZE];
-    pcm_buffer_t pcm_buffer;
+    uint16_t PCM_Buffer[PCM_BUFFER_SIZE];
     CCA02M2_AUDIO_Init_t MicParams;
-    IFL_DEQUE_DECLARE(audio_queue, pcm_buffer_t, QUEUE_SIZE);
 } pyb_sai_obj_t;
 
 // ------------------------------------------------------------------------------------------------
 // private variables
 // ------------------------------------------------------------------------------------------------
 
-const char * filename = "audio_test.wav";
 STATIC pyb_sai_obj_t pyb_sai_obj;
-
-STATIC uint32_t fille_size = 0;
-STATIC uint32_t nb_write = 0;
-STATIC uint32_t ts = 0;
 
 volatile bool end_record = false;
 
@@ -83,23 +93,10 @@ static void audio_process(void);
 
 static void audio_process(void)
 {
-    CCA02M2_AUDIO_IN_PDMToPCM(CCA02M2_AUDIO_INSTANCE,(uint16_t * )pyb_sai_obj.PDM_Buffer, pyb_sai_obj.pcm_buffer.PCM_Buffer);    
-    
-    __disable_irq();
-    IFL_DEQUE_PUSH_BACK(&pyb_sai_obj.audio_queue, &pyb_sai_obj.pcm_buffer);
-    __enable_irq();
+    CCA02M2_AUDIO_IN_PDMToPCM(CCA02M2_AUDIO_INSTANCE,(uint16_t * )pyb_sai_obj.PDM_Buffer, pyb_sai_obj.PCM_Buffer);    
 
-    nb_write++;
 
-    if(nb_write > (1000 / N_MS_PER_INTERRUPT))
-    {
-        printf("End TS : %ld  %ld\n",  HAL_GetTick(),  HAL_GetTick() - ts);
-        
-        CCA02M2_AUDIO_IN_Stop(CCA02M2_AUDIO_INSTANCE);
-
-        end_record = true;
-    }
-
+    end_record = true;
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -132,8 +129,6 @@ void sai_init(void)
     pyb_sai_obj.MicParams.Volume = AUDIO_VOLUME_INPUT;
 
     CCA02M2_AUDIO_IN_Init(CCA02M2_AUDIO_INSTANCE, &pyb_sai_obj.MicParams);
-
-    IFL_DEQUE_INIT(&pyb_sai_obj.audio_queue);
 }
 
 
@@ -159,19 +154,20 @@ STATIC mp_obj_t pyb_sai_record(mp_obj_t self_in, mp_obj_t file_name, mp_obj_t ti
     const char *p_in;
     const char *p_out;
 
-    fille_size = 0;
-    nb_write = 0;
-    end_record = false;
+
+    uint32_t fille_size = 0;
+    uint32_t nb_write = 0;
+    FIL fp;
+    UINT n;
 
     p_in = mp_obj_str_get_str(file_name);
+    uint32_t recording_time = mp_obj_get_int(time_in);
 
     mp_vfs_mount_t * mp_vfs = mp_vfs_lookup_path(p_in, &p_out);
 
     fs_user_mount_t * vfs = (fs_user_mount_t *) mp_vfs->obj;
 
     FATFS fatfs = vfs->fatfs;
-    FIL fp;
-    UINT n;
 
     FRESULT res = f_open(&fatfs, &fp, p_in, FA_WRITE | FA_CREATE_ALWAYS);
 
@@ -180,63 +176,77 @@ STATIC mp_obj_t pyb_sai_record(mp_obj_t self_in, mp_obj_t file_name, mp_obj_t ti
         printf("Unable to open File :%d \n", res);
         return mp_const_none;
     }
-    else
+
+    wav_header_t wav_header = 
+    { 
+        .FileTypeBlocID = { 'R','I','F','F'},
+        .FileSize = 0,
+        .FileFormatID = { 'W','A','V','E'},
+        .FormatBlocID = { 'f','m','t', 0x20},
+        .BlocSize = 16,
+        .AudioFormat = 1, // PCM
+        .NbrCanaux = AUDIO_IN_CHANNELS,
+        .Frequence = AUDIO_IN_SAMPLING_FREQUENCY,
+        .BytePerSec = AUDIO_IN_SAMPLING_FREQUENCY * 16 / 8 * AUDIO_IN_CHANNELS,
+        .BytePerBloc = 2, // BlockSize * AUDIO_IN_CHANNELS / 8
+        .BitsPerSample = 16,
+        .DataBlocID = { 'd','a','t','a'},
+        .DataSize = 0,
+    };
+
+    res = f_write(&fp, (uint8_t *) &wav_header, sizeof(wav_header_t), &n);
+
+    if (res != FR_OK) 
     {
-        printf("%s open ok !\n", p_in);
+        printf("Unable to write File :%d \n", res);
+        return mp_const_none;
     }
+
+    f_sync(&fp);
 
     CCA02M2_AUDIO_IN_Record(CCA02M2_AUDIO_INSTANCE, (uint8_t *) pyb_sai_obj.PDM_Buffer, AUDIO_IN_BUFFER_SIZE);
 
-    ts = HAL_GetTick();
-    printf("Start TS : %ld\n", ts);
+    end_record = false;
 
-    uint32_t queue_size = IFL_DEQUE_SIZE(&pyb_sai_obj.audio_queue);
-    
-    while((!end_record ) || (queue_size != 0))
-    {   
-        queue_size = IFL_DEQUE_SIZE(&pyb_sai_obj.audio_queue);
+    while(nb_write < (recording_time / N_MS_PER_INTERRUPT))
+    {       
+        if(end_record)
+        {
+            end_record = false;
 
-        if(queue_size > 0)
-        {   
-            printf("%ld %ld %ld\n", nb_write * N_MS_PER_INTERRUPT, queue_size, HAL_GetTick());
+            f_write(&fp, (uint8_t *)pyb_sai_obj.PCM_Buffer, PCM_BUFFER_SIZE * sizeof(uint16_t), &n);
 
-            for (uint16_t i = 0; i < queue_size; i++)
-            {
-                pcm_buffer_t * data = NULL;
-                
-                __disable_irq();
-                IFL_DEQUE_FRONT(&pyb_sai_obj.audio_queue, data);
-                __enable_irq();
-                // pyb_sai_obj.PCM_Buffer[i % PCM_BUFFER_SIZE] = *data;
-
-                // if((i % PCM_BUFFER_SIZE == 0 ) && (i > 0))
-                {                  
-                    res = f_write(&fp, (uint8_t *) data->PCM_Buffer, PCM_BUFFER_SIZE * sizeof(uint16_t), &n);
-                    __disable_irq();
-                    IFL_DEQUE_POP_FRONT(&pyb_sai_obj.audio_queue);
-                    __enable_irq();
-                    fille_size += n;
-
-                    if (res != FR_OK) 
-                    {
-                        printf("Unable to wrie File :%d \n", res);
-                        break;
-                    }
-                    else
-                    {
-                        // printf(" nb write : %d \n", n);
-                    }
-
-                }
-            }
-        } 
+            nb_write++;
+        }
+        
         __WFI();
     }
 
+    CCA02M2_AUDIO_IN_Stop(CCA02M2_AUDIO_INSTANCE);
+
+
+    wav_header.FileSize = fille_size + sizeof(wav_header_t) - 8;
+    wav_header.DataSize = fille_size;
+
+    res = f_lseek(&fp, 0);
+
+    if (res != FR_OK) 
+    {
+        printf("Unable to fseek File :%d \n", res);
+        return mp_const_none;
+    }
+    
+
+    res = f_write(&fp, (uint8_t *) &wav_header, sizeof(wav_header_t), &n);
+
+    if (res != FR_OK) 
+    {
+        printf("Unable to write File :%d \n", res);
+        return mp_const_none;
+    }
+    f_sync(&fp);
     
     f_close(&fp);
-
-    printf("End Record %s close , size : %ld\n", p_in, fille_size);
 
     return mp_const_none;
 }

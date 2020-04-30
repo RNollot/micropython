@@ -40,7 +40,7 @@ modification in the application layer developed with the older versions of the d
 /*Number of millisecond of audio at each DMA interrupt*/
 #define N_MS_PER_INTERRUPT               (10U)
   
-#define AUDIO_IN_CHANNELS 				2
+#define AUDIO_IN_CHANNELS 				1
 #define AUDIO_IN_SAMPLING_FREQUENCY 	16000
 
 #define AUDIO_IN_BUFFER_SIZE            DEFAULT_AUDIO_IN_BUFFER_SIZE  
