@@ -40,12 +40,12 @@ modification in the application layer developed with the older versions of the d
 /*Number of millisecond of audio at each DMA interrupt*/
 #define N_MS_PER_INTERRUPT               (10U)
   
-#define AUDIO_IN_CHANNELS 2
-#define AUDIO_IN_SAMPLING_FREQUENCY 16000
+#define AUDIO_IN_CHANNELS 				2
+#define AUDIO_IN_SAMPLING_FREQUENCY 	16000
 
 #define AUDIO_IN_BUFFER_SIZE            DEFAULT_AUDIO_IN_BUFFER_SIZE  
 #define AUDIO_VOLUME_INPUT              16U
-#define CCA02M2_AUDIO_INSTANCE 0U
+#define CCA02M2_AUDIO_INSTANCE 			0U
 #define CCA02M2_AUDIO_IN_IT_PRIORITY    0U
 
 #if (AUDIO_IN_SAMPLING_FREQUENCY == 8000)

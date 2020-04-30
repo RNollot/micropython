@@ -60,6 +60,7 @@ typedef struct pyb_sai_obj_t
 const char * filename = "audio_test.wav";
 STATIC pyb_sai_obj_t pyb_sai_obj;
 
+STATIC uint32_t fille_size = 0;
 STATIC uint32_t nb_write = 0;
 STATIC uint32_t ts = 0;
 
@@ -158,6 +159,7 @@ STATIC mp_obj_t pyb_sai_record(mp_obj_t self_in, mp_obj_t file_name, mp_obj_t ti
     const char *p_in;
     const char *p_out;
 
+    fille_size = 0;
     nb_write = 0;
     end_record = false;
 
@@ -185,7 +187,6 @@ STATIC mp_obj_t pyb_sai_record(mp_obj_t self_in, mp_obj_t file_name, mp_obj_t ti
 
     CCA02M2_AUDIO_IN_Record(CCA02M2_AUDIO_INSTANCE, (uint8_t *) pyb_sai_obj.PDM_Buffer, AUDIO_IN_BUFFER_SIZE);
 
-    static uint32_t fille_size = 0;
     ts = HAL_GetTick();
     printf("Start TS : %ld\n", ts);
 
