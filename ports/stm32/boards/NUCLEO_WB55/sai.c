@@ -20,7 +20,7 @@
 #include "py/mperrno.h"
 #include "lib/oofatfs/ff.h"
 
-#include "ifl_deque.h"
+
 // ------------------------------------------------------------------------------------------------
 // private constant macros
 // ------------------------------------------------------------------------------------------------
@@ -74,7 +74,7 @@ typedef struct pyb_sai_obj_t
 
 STATIC pyb_sai_obj_t pyb_sai_obj;
 
-volatile bool end_record = false;
+volatile bool new_data = false;
 
 // ------------------------------------------------------------------------------------------------
 // public variables
@@ -96,7 +96,7 @@ static void audio_process(void)
     CCA02M2_AUDIO_IN_PDMToPCM(CCA02M2_AUDIO_INSTANCE,(uint16_t * )pyb_sai_obj.PDM_Buffer, pyb_sai_obj.PCM_Buffer);    
 
 
-    end_record = true;
+    new_data = true;
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -147,7 +147,7 @@ STATIC mp_obj_t pyb_sai_make_new(const mp_obj_type_t *type, size_t n_args, size_
     return MP_OBJ_FROM_PTR(sai);
 }
 
-STATIC mp_obj_t pyb_sai_record(mp_obj_t self_in, mp_obj_t file_name, mp_obj_t time_in) 
+STATIC mp_obj_t pyb_sai_record(mp_obj_t self_in, mp_obj_t file_name, mp_obj_t time_in_s) 
 {
     // pyb_sai_obj_t *self = MP_OBJ_TO_PTR(self_in);
 
@@ -161,7 +161,7 @@ STATIC mp_obj_t pyb_sai_record(mp_obj_t self_in, mp_obj_t file_name, mp_obj_t ti
     UINT n;
 
     p_in = mp_obj_str_get_str(file_name);
-    uint32_t recording_time = mp_obj_get_int(time_in);
+    uint32_t recording_time_ms = mp_obj_get_int(time_in_s) * 1000;
 
     mp_vfs_mount_t * mp_vfs = mp_vfs_lookup_path(p_in, &p_out);
 
@@ -173,7 +173,7 @@ STATIC mp_obj_t pyb_sai_record(mp_obj_t self_in, mp_obj_t file_name, mp_obj_t ti
 
     if (res != FR_OK) 
     {
-        printf("Unable to open File :%d \n", res);
+        mp_raise_msg_varg(&mp_type_Exception, MP_ERROR_TEXT("Unable to open File :%d"), res);
         return mp_const_none;
     }
 
@@ -198,7 +198,7 @@ STATIC mp_obj_t pyb_sai_record(mp_obj_t self_in, mp_obj_t file_name, mp_obj_t ti
 
     if (res != FR_OK) 
     {
-        printf("Unable to write File :%d \n", res);
+        mp_raise_msg_varg(&mp_type_Exception, MP_ERROR_TEXT("Unable to write File :%d"), res);
         return mp_const_none;
     }
 
@@ -206,13 +206,13 @@ STATIC mp_obj_t pyb_sai_record(mp_obj_t self_in, mp_obj_t file_name, mp_obj_t ti
 
     CCA02M2_AUDIO_IN_Record(CCA02M2_AUDIO_INSTANCE, (uint8_t *) pyb_sai_obj.PDM_Buffer, AUDIO_IN_BUFFER_SIZE);
 
-    end_record = false;
+    new_data = false;
 
-    while(nb_write < (recording_time / N_MS_PER_INTERRUPT))
+    while(nb_write < (recording_time_ms / N_MS_PER_INTERRUPT))
     {       
-        if(end_record)
+        if(new_data == true)
         {
-            end_record = false;
+            new_data = false;
 
             f_write(&fp, (uint8_t *)pyb_sai_obj.PCM_Buffer, PCM_BUFFER_SIZE * sizeof(uint16_t), &n);
 
@@ -232,7 +232,7 @@ STATIC mp_obj_t pyb_sai_record(mp_obj_t self_in, mp_obj_t file_name, mp_obj_t ti
 
     if (res != FR_OK) 
     {
-        printf("Unable to fseek File :%d \n", res);
+        mp_raise_msg_varg(&mp_type_Exception, MP_ERROR_TEXT("Unable to fseek File :%d"), res);
         return mp_const_none;
     }
     
@@ -241,7 +241,7 @@ STATIC mp_obj_t pyb_sai_record(mp_obj_t self_in, mp_obj_t file_name, mp_obj_t ti
 
     if (res != FR_OK) 
     {
-        printf("Unable to write File :%d \n", res);
+        mp_raise_msg_varg(&mp_type_Exception, MP_ERROR_TEXT("Unable to write File :%d"), res);
         return mp_const_none;
     }
     f_sync(&fp);

@@ -184,7 +184,7 @@ STATIC sd_result_t SD_GoIdleState(void)
 		SD_IO_WriteByte(SD_DUMMY_BYTE);
 		if(counter >= SD_MAX_TRY)
 		{
-			printf("SD Idle State ERROR");
+			printf("SD Idle State ERROR\n");
 			return SD_FAILED;
 		}
 	}
@@ -240,7 +240,7 @@ STATIC sd_result_t SD_GoIdleState(void)
 				SD_IO_WriteByte(SD_DUMMY_BYTE);
 				if(response.r1 != SD_R1_IN_IDLE_STATE)
 				{
-					printf("SD Idle State ERROR");
+					printf("SD Idle State ERROR\n");
 					return SD_FAILED;
 				}
 				/* Send ACMD41 (SD_CMD_SD_APP_OP_COND) to initialize SDHC or SDXC cards: R1 response (0x00: no errors) */
@@ -257,14 +257,14 @@ STATIC sd_result_t SD_GoIdleState(void)
 		SD_IO_WriteByte(SD_DUMMY_BYTE);
 		if(response.r1 != SD_R1_NO_ERROR)
 		{
-			printf("SD Idle State ERROR");
+			printf("SD Idle State ERROR\n");
 			return SD_FAILED;
 		}
 		flag_SDHC = (response.r2 & 0x40) >> 6;
 	}
 	else
 	{
-		printf("SD Idle State ERROR");
+		printf("SD Idle State ERROR\n");
 		return SD_FAILED;
 	}
 	return SD_SUCCESS;
@@ -641,7 +641,7 @@ mp_uint_t sdcard_read_blocks(uint8_t *dest, uint32_t block_num, uint32_t num_blo
 	if ( response.r1 != SD_R1_NO_ERROR)
 	{
 		sd_result = SD_READ_ERROR;
-		printf(" Unexpected error while reading");
+		printf(" Unexpected error while reading\n");
 	}
 	else
 	{
@@ -661,7 +661,7 @@ mp_uint_t sdcard_read_blocks(uint8_t *dest, uint32_t block_num, uint32_t num_blo
 			if (response.r1 != SD_R1_NO_ERROR)
 			{
 				sd_result = SD_READ_ERROR;
-				printf(" Unexpected error while reading : n° %lu block", nb_block_to_read);
+				printf(" Unexpected error while reading : n° %lu block \n", nb_block_to_read);
 				break;
 			}
 
@@ -682,7 +682,7 @@ mp_uint_t sdcard_read_blocks(uint8_t *dest, uint32_t block_num, uint32_t num_blo
 			else
 			{
 				sd_result = SD_READ_ERROR;
-				printf(" Unexpected error while reading : n° %lu block", nb_block_to_read);
+				printf(" Unexpected error while reading : n° %lu block \n", nb_block_to_read);
 				break;
 			}
 
@@ -725,7 +725,7 @@ mp_uint_t sdcard_write_blocks(const uint8_t *src, uint32_t block_num, uint32_t n
 	if ( response.r1 != SD_R1_NO_ERROR)
 	{
 		sd_result = SD_WRITE_ERROR;
-		printf(" Unexpected error while writing");
+		printf(" Unexpected error while writing\n");
 	}
 	else
 	{
@@ -744,7 +744,7 @@ mp_uint_t sdcard_write_blocks(const uint8_t *src, uint32_t block_num, uint32_t n
 			if (response.r1 != SD_R1_NO_ERROR)
 			{
 				sd_result = SD_WRITE_ERROR;
-				printf(" Unexpected error while writing");
+				printf(" Unexpected error while writing \n");
 				break;
 			}
 
@@ -771,7 +771,7 @@ mp_uint_t sdcard_write_blocks(const uint8_t *src, uint32_t block_num, uint32_t n
 			{
 				/* Set response value to failure */
 				sd_result = SD_WRITE_ERROR;
-				printf(" Unexpected error while writing, n° %lu block", nb_block_to_write);
+				printf(" Unexpected error while writing, n° %lu block \n", nb_block_to_write);
 				break;
 			}
 
