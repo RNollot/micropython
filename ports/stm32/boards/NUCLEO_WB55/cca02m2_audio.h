@@ -248,10 +248,6 @@ typedef struct
 #define AUDIO_IN_SAI_SD_GPIO_PORT                              GPIOA
 #define AUDIO_IN_SAI_SD_GPIO_CLK_ENABLE()                      __GPIOA_CLK_ENABLE();
 #define AUDIO_IN_SAI_SD_AF                                     GPIO_AF3_SAI1
-#define AUDIO_IN_SAI_SD2_PIN                                    GPIO_PIN_9
-#define AUDIO_IN_SAI_SD2_GPIO_PORT                              GPIOA
-#define AUDIO_IN_SAI_SD2_GPIO_CLK_ENABLE()                      __GPIOA_CLK_ENABLE();
-#define AUDIO_IN_SAI_SD2_AF                                     GPIO_AF3_SAI1
   
   /* I2S DMA definitions */
 #define AUDIO_IN_SAI_DMAx_CLK_ENABLE()                          __DMA1_CLK_ENABLE()

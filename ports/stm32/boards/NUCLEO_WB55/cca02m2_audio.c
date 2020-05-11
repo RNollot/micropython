@@ -2891,10 +2891,6 @@ static void DFSDM_FilterMspDeInit(DFSDM_Filter_HandleTypeDef *hDfsdmFilter)
   GPIO_InitStruct.Alternate = AUDIO_IN_SAI_SD_AF;
   HAL_GPIO_Init(AUDIO_IN_SAI_SD_GPIO_PORT, &GPIO_InitStruct);
   
-    GPIO_InitStruct.Pin     = AUDIO_IN_SAI_SD2_PIN ;
-  GPIO_InitStruct.Alternate = AUDIO_IN_SAI_SD2_AF;
-  HAL_GPIO_Init(AUDIO_IN_SAI_SD_GPIO_PORT, &GPIO_InitStruct);
-  
   /* Enable the DMA clock */
     /* DMA controller clock enable */
   __HAL_RCC_DMAMUX1_CLK_ENABLE();

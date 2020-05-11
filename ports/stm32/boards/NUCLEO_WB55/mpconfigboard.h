@@ -18,7 +18,7 @@
 
 // SD card detect switch
 #if MICROPY_HW_ENABLE_SPI_SDCARD
-#define MICROPY_HW_SDCARD_DETECT_PIN        (pin_B11)
+#define MICROPY_HW_SDCARD_DETECT_PIN        (pin_A9)
 #define MICROPY_HW_SDCARD_DETECT_PULL       (GPIO_PULLUP)
 #define MICROPY_HW_SDCARD_DETECT_PRESENT    (0)
 #endif
