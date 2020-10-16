@@ -14,7 +14,7 @@ include ../../py/mkenv.mk
 -include mpconfigport.mk
 include $(BOARD_DIR)/mpconfigboard.mk
 
-DEBUG ?= 1
+DEBUG ?= 0
 # Files that are generated and needed before the QSTR build.
 QSTR_GENERATED_HEADERS = $(BUILD)/pins_qstr.h $(BUILD)/modstm_qstr.h
 

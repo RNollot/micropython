@@ -769,13 +769,15 @@ void DMA1_Channel4_IRQHandler(void) {
     }
     IRQ_EXIT(DMA1_Channel4_IRQn);
 }
-void DMA1_Channel5_IRQHandler(void) {
-    IRQ_ENTER(DMA1_Channel5_IRQn);
-    if (dma_handle[dma_id_4] != NULL) {
-        HAL_DMA_IRQHandler(dma_handle[dma_id_4]);
-    }
-    IRQ_EXIT(DMA1_Channel5_IRQn);
-}
+// Reserved FOR SAI
+// TODO : Use micropython dma_object with the sai module
+// void DMA1_Channel5_IRQHandler(void) {
+//     IRQ_ENTER(DMA1_Channel5_IRQn);
+//     if (dma_handle[dma_id_4] != NULL) {
+//         HAL_DMA_IRQHandler(dma_handle[dma_id_4]);
+//     }
+//     IRQ_EXIT(DMA1_Channel5_IRQn);
+// }
 void DMA1_Channel6_IRQHandler(void) {
     IRQ_ENTER(DMA1_Channel6_IRQn);
     if (dma_handle[dma_id_5] != NULL) {

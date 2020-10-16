@@ -102,7 +102,7 @@ static void audio_process(void)
 // ------------------------------------------------------------------------------------------------
 // interrupt handlers
 // ------------------------------------------------------------------------------------------------
-void DMA1_Channel1_IRQHandler(void)
+void DMA1_Channel5_IRQHandler(void)
 {
     HAL_DMA_IRQHandler(hAudioInSai.hdmarx);
 }

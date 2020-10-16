@@ -2898,7 +2898,7 @@ static void DFSDM_FilterMspDeInit(DFSDM_Filter_HandleTypeDef *hDfsdmFilter)
 
   
     /* Configure the hSaiDma handle parameters */
-   hSaiDma.Instance = DMA1_Channel1; /*tODO DEFINES */
+   hSaiDma.Instance = DMA1_Channel5; /*tODO DEFINES */
    hSaiDma.Init.Request             = DMA_REQUEST_SAI1_A;
    hSaiDma.Init.Direction           = DMA_PERIPH_TO_MEMORY;
    hSaiDma.Init.PeriphInc           = DMA_PINC_DISABLE;
@@ -2921,8 +2921,8 @@ static void DFSDM_FilterMspDeInit(DFSDM_Filter_HandleTypeDef *hDfsdmFilter)
 
   
   /* I2S DMA IRQ Channel configuration */
-  HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, CCA02M2_AUDIO_IN_IT_PRIORITY, 0);
-  HAL_NVIC_EnableIRQ(DMA1_Channel1_IRQn);
+  HAL_NVIC_SetPriority(DMA1_Channel5_IRQn, CCA02M2_AUDIO_IN_IT_PRIORITY, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Channel5_IRQn);
 }
 
 #else
