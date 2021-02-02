@@ -64,6 +64,7 @@ INC += -I$(TOP)/lib/cmsis/inc
 INC += -I$(CMSIS_DIR)/
 INC += -I$(TOP)/$(HAL_DIR)/Inc
 INC += -I$(USBDEV_DIR)/core/inc -I$(USBDEV_DIR)/class/inc
+INC += -I$(BOARD_DIR)
 #INC += -I$(USBHOST_DIR)
 INC += -Ilwip_inc
 
