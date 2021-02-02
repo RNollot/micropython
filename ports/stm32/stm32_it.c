@@ -735,6 +735,13 @@ void TIM17_IRQHandler(void) {
 }
 #endif
 
+// LPUART IRQ handlers
+void LPUART1_IRQHandler(void) {
+    IRQ_ENTER(LPUART1_IRQn);
+    uart_irq_handler(2);
+    IRQ_EXIT(LPUART1_IRQn);
+}
+
 // UART/USART IRQ handlers
 void USART1_IRQHandler(void) {
     IRQ_ENTER(USART1_IRQn);

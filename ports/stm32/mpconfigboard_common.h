@@ -214,7 +214,7 @@
 #define PYB_EXTI_NUM_VECTORS (20)
 #define MICROPY_HW_MAX_I2C (3)
 #define MICROPY_HW_MAX_TIMER (17)
-#define MICROPY_HW_MAX_UART (1)
+#define MICROPY_HW_MAX_UART (2)
 
 #else
 #error Unsupported MCU series

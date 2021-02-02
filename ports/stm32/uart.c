@@ -38,6 +38,9 @@
 #include "irq.h"
 #include "pendsv.h"
 
+#include "stm32wbxx_ll_lpuart.h"
+#include "stm32wbxx_ll_gpio.h"
+
 #if defined(STM32F4)
 #define UART_RXNE_IS_SET(uart) ((uart)->SR & USART_SR_RXNE)
 #elif defined(STM32H7)
@@ -201,6 +204,11 @@ bool uart_exists(int uart_id) {
             return true;
         #endif
 
+        #if defined(MICROPY_HW_LPUART1_TX) && defined(MICROPY_HW_LPUART1_RX)
+        case PYB_LPUART_1:
+            return true;
+        #endif
+
         default:
             return false;
     }
@@ -245,6 +253,27 @@ bool uart_init(pyb_uart_obj_t *uart_obj,
             }
             #endif
             __HAL_RCC_USART2_CLK_ENABLE();
+            break;
+        #endif
+
+        #if defined(MICROPY_HW_LPUART1_TX) && defined(MICROPY_HW_LPUART1_RX)
+        case PYB_LPUART_1:
+            uart_unit = 2;
+            UARTx = LPUART1;
+            irqn = LPUART1_IRQn;
+            pins[0] = MICROPY_HW_LPUART1_TX;
+            pins[1] = MICROPY_HW_LPUART1_RX;
+            #if defined(MICROPY_HW_LPUART1_RTS)
+            if (flow & UART_HWCONTROL_RTS) {
+                pins[2] = MICROPY_HW_LPUART1_RTS;
+            }
+            #endif
+            #if defined(MICROPY_HW_LPUART1_CTS)
+            if (flow & UART_HWCONTROL_CTS) {
+                pins[3] = MICROPY_HW_LPUART1_CTS;
+            }
+            #endif
+            __HAL_RCC_LPUART1_CLK_ENABLE();
             break;
         #endif
 
@@ -411,32 +440,82 @@ bool uart_init(pyb_uart_obj_t *uart_obj,
             return false;
     }
 
-    uint32_t mode = MP_HAL_PIN_MODE_ALT;
-    uint32_t pull = MP_HAL_PIN_PULL_UP;
+    uart_obj->uartx = UARTx;
+    
+    if(UARTx == LPUART1)
+    {
 
-    for (uint i = 0; i < 4; i++) {
-        if (pins[i] != NULL) {
-            bool ret = mp_hal_pin_config_alt(pins[i], mode, pull, AF_FN_UART, uart_unit);
-            if (!ret) {
-                return false;
+        LL_LPUART_InitTypeDef LPUART_InitStruct = {0};
+
+        LL_GPIO_InitTypeDef GPIO_InitStruct = {0};
+
+        /* Peripheral clock enable */
+        LL_APB1_GRP2_EnableClock(LL_APB1_GRP2_PERIPH_LPUART1);
+
+        LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_GPIOA);
+
+        LL_RCC_SetLPUARTClockSource(LL_RCC_LPUART1_CLKSOURCE_PCLK1);
+        /**LPUART1 GPIO Configuration
+        PA3   ------> LPUART1_RX
+        PA2   ------> LPUART1_TX
+        */
+        GPIO_InitStruct.Pin = LL_GPIO_PIN_2|LL_GPIO_PIN_3;
+        GPIO_InitStruct.Mode = LL_GPIO_MODE_ALTERNATE;
+        GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_HIGH;
+        GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
+        GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
+        GPIO_InitStruct.Alternate = LL_GPIO_AF_8;
+        LL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+
+        LPUART_InitStruct.PrescalerValue = LL_LPUART_PRESCALER_DIV4;
+        LPUART_InitStruct.BaudRate = baudrate;
+        LPUART_InitStruct.DataWidth = bits;
+        LPUART_InitStruct.StopBits = stop;
+        LPUART_InitStruct.Parity = parity;
+        LPUART_InitStruct.TransferDirection = LL_LPUART_DIRECTION_TX_RX;
+        LPUART_InitStruct.HardwareFlowControl = flow;
+        LL_LPUART_Init(LPUART1, &LPUART_InitStruct);
+        LL_LPUART_SetTXFIFOThreshold(LPUART1, LL_LPUART_FIFOTHRESHOLD_1_8);
+        LL_LPUART_SetRXFIFOThreshold(LPUART1, LL_LPUART_FIFOTHRESHOLD_1_8);
+
+        LL_LPUART_Enable(LPUART1);
+
+        /* Polling LPUART1 initialisation */
+        while((!(LL_LPUART_IsActiveFlag_TEACK(LPUART1))) || (!(LL_LPUART_IsActiveFlag_REACK(LPUART1))))
+        {
+        }
+
+    }
+    else
+    {    
+        uint32_t mode = MP_HAL_PIN_MODE_ALT;
+        uint32_t pull = MP_HAL_PIN_PULL_UP;
+
+        for (uint i = 0; i < 4; i++) {
+            if (pins[i] != NULL) {
+                bool ret = mp_hal_pin_config_alt(pins[i], mode, pull, AF_FN_UART, uart_unit);
+                if (!ret) {
+                    return false;
+                }
             }
         }
+
+
+        // init UARTx
+        UART_HandleTypeDef huart;
+        memset(&huart, 0, sizeof(huart));
+        huart.Instance = UARTx;
+        huart.Init.BaudRate = baudrate;
+        huart.Init.WordLength = bits;
+        huart.Init.StopBits = stop;
+        huart.Init.Parity = parity;
+        huart.Init.Mode = UART_MODE_TX_RX;
+        huart.Init.HwFlowCtl = flow;
+        huart.Init.OverSampling = UART_OVERSAMPLING_16;
+        HAL_UART_Init(&huart);
     }
 
-    uart_obj->uartx = UARTx;
-
-    // init UARTx
-    UART_HandleTypeDef huart;
-    memset(&huart, 0, sizeof(huart));
-    huart.Instance = UARTx;
-    huart.Init.BaudRate = baudrate;
-    huart.Init.WordLength = bits;
-    huart.Init.StopBits = stop;
-    huart.Init.Parity = parity;
-    huart.Init.Mode = UART_MODE_TX_RX;
-    huart.Init.HwFlowCtl = flow;
-    huart.Init.OverSampling = UART_OVERSAMPLING_16;
-    HAL_UART_Init(&huart);
 
     // Disable all individual UART IRQs, but enable the global handler
     uart_obj->uartx->CR1 &= ~USART_CR1_IE_ALL;
@@ -596,6 +675,14 @@ void uart_deinit(pyb_uart_obj_t *self) {
         __HAL_RCC_UART10_RELEASE_RESET();
         __HAL_RCC_UART10_CLK_DISABLE();
     #endif
+    #if defined(LPUART1)
+    } else if (self->uart_id == 1) {
+        HAL_NVIC_DisableIRQ(LPUART1_IRQn);
+        __HAL_RCC_LPUART1_FORCE_RESET();
+        __HAL_RCC_LPUART1_RELEASE_RESET();
+        __HAL_RCC_LPUART1_CLK_DISABLE();
+    #endif
+
     }
 }
 
@@ -654,6 +741,12 @@ uint32_t uart_get_baudrate(pyb_uart_obj_t *self) {
         default:
             break;
     }
+    #elif defined(STM32WB)
+      if (self->uart_id == 1) {
+        uart_clk = HAL_RCC_GetPCLK2Freq();
+    } else {
+        return LL_LPUART_GetBaudRate(LPUART1, HAL_RCC_GetPCLK1Freq(), LL_LPUART_PRESCALER_DIV4);
+    }  
     #else
     if (self->uart_id == 1
         #if defined(USART6)

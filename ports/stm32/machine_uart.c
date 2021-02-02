@@ -76,7 +76,7 @@
 STATIC void pyb_uart_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind) {
     pyb_uart_obj_t *self = MP_OBJ_TO_PTR(self_in);
     if (!self->is_enabled) {
-        mp_printf(print, "UART(%u)", self->uart_id);
+        mp_printf(print, "UART/LPUART(%u)", self->uart_id);
     } else {
         mp_int_t bits;
         uint32_t cr1 = self->uartx->CR1;
@@ -98,7 +98,7 @@ STATIC void pyb_uart_print(const mp_print_t *print, mp_obj_t self_in, mp_print_k
         if (cr1 & USART_CR1_PCE) {
             bits -= 1;
         }
-        mp_printf(print, "UART(%u, baudrate=%u, bits=%u, parity=",
+        mp_printf(print, "UART/LPUART(%u, baudrate=%u, bits=%u, parity=",
             self->uart_id, uart_get_baudrate(self), bits);
         if (!(cr1 & USART_CR1_PCE)) {
             mp_print_str(print, "None");
@@ -212,7 +212,7 @@ STATIC mp_obj_t pyb_uart_init_helper(pyb_uart_obj_t *self, size_t n_args, const 
 
     // init UART (if it fails, it's because the port doesn't exist)
     if (!uart_init(self, baudrate, bits, parity, stop, flow)) {
-        mp_raise_msg_varg(&mp_type_ValueError, MP_ERROR_TEXT("UART(%d) doesn't exist"), self->uart_id);
+        mp_raise_msg_varg(&mp_type_ValueError, MP_ERROR_TEXT("UART/LPUART(%d) doesn't exist"), self->uart_id);
     }
 
     // Restore attach_to_repl setting so UART still works if attached to dupterm.
@@ -233,7 +233,7 @@ STATIC mp_obj_t pyb_uart_init_helper(pyb_uart_obj_t *self, size_t n_args, const 
     if (self->is_static) {
         // Static UARTs have fixed memory for the rxbuf and can't be reconfigured.
         if (args.rxbuf.u_int >= 0) {
-            mp_raise_ValueError(MP_ERROR_TEXT("UART is static and rxbuf can't be changed"));
+            mp_raise_ValueError(MP_ERROR_TEXT("UART/LPUART is static and rxbuf can't be changed"));
         }
         uart_set_rxbuf(self, self->read_buf_len, self->read_buf);
     } else {
@@ -299,6 +299,10 @@ STATIC mp_obj_t pyb_uart_make_new(const mp_obj_type_t *type, size_t n_args, size
         } else if (strcmp(port, MICROPY_HW_UART1_NAME) == 0) {
             uart_id = PYB_UART_1;
         #endif
+        #ifdef MICROPY_HW_LPUART1_NAME
+        } else if (strcmp(port, MICROPY_HW_LPUART1_NAME) == 0) {
+            uart_id = PYB_UART_2;
+        #endif
         #ifdef MICROPY_HW_UART2_NAME
         } else if (strcmp(port, MICROPY_HW_UART2_NAME) == 0) {
             uart_id = PYB_UART_2;
@@ -335,14 +339,22 @@ STATIC mp_obj_t pyb_uart_make_new(const mp_obj_type_t *type, size_t n_args, size
         } else if (strcmp(port, MICROPY_HW_UART10_NAME) == 0) {
             uart_id = PYB_UART_10;
         #endif
+        #ifdef MICROPY_HW_LPUART1_NAME
+        } else if (strcmp(port, MICROPY_HW_LPUART1_NAME) == 0) {
+            uart_id = PYB_LPUART_1;
+        #endif
         } else {
-            mp_raise_msg_varg(&mp_type_ValueError, MP_ERROR_TEXT("UART(%s) doesn't exist"), port);
+            mp_raise_msg_varg(&mp_type_ValueError, MP_ERROR_TEXT("UART/LPUART(%s) doesn't exist"), port);
         }
     } else {
         uart_id = mp_obj_get_int(args[0]);
         if (!uart_exists(uart_id)) {
-            mp_raise_msg_varg(&mp_type_ValueError, MP_ERROR_TEXT("UART(%d) doesn't exist"), uart_id);
+            mp_raise_msg_varg(&mp_type_ValueError, MP_ERROR_TEXT("UART/LPUART(%d) doesn't exist"), uart_id);
         }
+    }
+    // check if the UART is reserved for system use or not
+    if (MICROPY_HW_UART_IS_RESERVED(uart_id)) {
+        mp_raise_msg_varg(&mp_type_ValueError, MP_ERROR_TEXT("UART/LPUART(%d) is reserved"), uart_id);
     }
 
     pyb_uart_obj_t *self;

@@ -103,6 +103,7 @@ CFLAGS += $(COPT)
 CFLAGS += -I$(BOARD_DIR)
 CFLAGS += -DSTM32_HAL_H='<stm32$(MCU_SERIES)xx_hal.h>'
 CFLAGS += -DMICROPY_HW_VTOR=$(TEXT0_ADDR)
+CFLAGS += -DUSE_FULL_LL_DRIVER=1
 
 # Configure for nan-boxing object model if requested
 ifeq ($(NANBOX),1)
@@ -379,6 +380,9 @@ SRC_HAL = $(addprefix $(HAL_DIR)/Src/stm32$(MCU_SERIES)xx_,\
 	hal_tim.c \
 	hal_tim_ex.c \
 	hal_uart.c \
+	ll_lpuart.c \
+	ll_rcc.c \
+	ll_gpio.c \
 	)
 
 ifeq ($(MCU_SERIES),$(filter $(MCU_SERIES),f4 f7 h7 l0 l4 wb))

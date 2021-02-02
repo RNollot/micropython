@@ -42,6 +42,8 @@ typedef enum {
     PYB_UART_10 = 10,
 } pyb_uart_t;
 
+#define PYB_LPUART_1  (PYB_UART_2)
+
 #define CHAR_WIDTH_8BIT (0)
 #define CHAR_WIDTH_9BIT (1)
 

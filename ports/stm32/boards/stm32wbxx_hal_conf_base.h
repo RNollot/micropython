@@ -42,6 +42,10 @@
 #include "stm32wbxx_hal_uart.h"
 #include "stm32wbxx_hal_usart.h"
 #include "stm32wbxx_hal_sai.h"
+#include "stm32wbxx_ll_adc.h"
+#include "stm32wbxx_ll_rtc.h"
+#include "stm32wbxx_ll_lpuart.h"
+#include "stm32wbxx_ll_gpio.h"
 
 // Enable various HAL modules
 #define HAL_MODULE_ENABLED
@@ -60,6 +64,7 @@
 #define HAL_UART_MODULE_ENABLED
 #define HAL_USART_MODULE_ENABLED
 #define HAL_SAI_MODULE_ENABLED
+#define HAL_LPUART_MODULE_ENABLED
 
 // Oscillator values in Hz
 #define MSI_VALUE   (4000000)
@@ -73,6 +78,7 @@
 #define PREFETCH_ENABLE             0
 #define USE_SPI_CRC                 0
 #define USE_RTOS                    0
+#define USE_FULL_LL_DRIVER			1
 
 // HAL parameter assertions are disabled
 #define assert_param(expr) ((void)0)
