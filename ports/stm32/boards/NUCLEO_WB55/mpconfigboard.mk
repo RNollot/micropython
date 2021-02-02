@@ -1,3 +1,7 @@
+# By default this board is configured to use mboot with packing (signing and encryption)
+# enabled.  Mboot must be deployed first.
+USE_MBOOT ?= 1
+
 MCU_SERIES = wb
 CMSIS_MCU = STM32WB55xx
 AF_FILE = boards/stm32wb55_af.csv
@@ -20,3 +24,5 @@ MICROPY_VFS_LFS2 = 1
 
 CFLAGS += -DARM_MATH_CM4 -DCORE_CM4 -D__FPU_PRESENT=1 -DUSE_STM32WBXX_NUCLEO
 LIBS +=  -l:libPDMFilter_CM4_GCC_wc32.a -Lboards/$(BOARD)
+# Mboot settings
+MBOOT_ENABLE_PACKING = 1
