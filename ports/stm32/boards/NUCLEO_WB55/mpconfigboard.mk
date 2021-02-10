@@ -1,6 +1,6 @@
 # By default this board is configured to use mboot with packing (signing and encryption)
 # enabled.  Mboot must be deployed first.
-USE_MBOOT ?= 1
+USE_MBOOT ?= 0
 
 MCU_SERIES = wb
 CMSIS_MCU = STM32WB55xx
@@ -22,7 +22,7 @@ MICROPY_PY_BLUETOOTH = 1
 MICROPY_BLUETOOTH_NIMBLE = 1
 MICROPY_VFS_LFS2 = 1
 
-CFLAGS += -DARM_MATH_CM4 -DCORE_CM4 -D__FPU_PRESENT=1 -DUSE_STM32WBXX_NUCLEO
+CFLAGS += -DARM_MATH_CM4 -DCORE_CM4 -D__FPU_PRESENT=1 -DUSE_STM32WBXX_NUCLEO -DAUDIO_ENABLE=1
 LIBS +=  -l:libPDMFilter_CM4_GCC_wc32.a -Lboards/$(BOARD)
 # Mboot settings
-MBOOT_ENABLE_PACKING = 1
+MBOOT_ENABLE_PACKING = 0

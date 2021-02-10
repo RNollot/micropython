@@ -165,6 +165,7 @@ void SystemClock_Config(void) {
 void SystemClock_Config(void) {
     // Enable the 32MHz external oscillator
 
+#if AUDIO_ENABLE==1
 
     RCC_OscInitTypeDef RCC_OscInitStruct = {0};
     RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
@@ -228,10 +229,51 @@ void SystemClock_Config(void) {
     {
     }    
 
+    HAL_PWREx_EnableVddUSB();
+#else
+    RCC->CR |= RCC_CR_HSEON;
+    while (!(RCC->CR & RCC_CR_HSERDY)) {
+    }
+
+    // Prevent CPU2 from disabling CLK48.
+    while (LL_HSEM_1StepLock(HSEM, CLK48_SEMID)) {
+    }
+
+    // Use HSE and the PLL to get a 64MHz SYSCLK
+    #define PLLM (HSE_VALUE / 8000000) // VCO input is 8MHz
+    #define PLLN (24) // 24*8MHz = 192MHz
+    #define PLLQ (4) // f_Q = 48MHz
+    #define PLLR (3) // f_R = 64MHz
+    RCC->PLLCFGR =
+        (PLLR - 1) << RCC_PLLCFGR_PLLR_Pos | RCC_PLLCFGR_PLLREN
+            | (PLLQ - 1) << RCC_PLLCFGR_PLLQ_Pos | RCC_PLLCFGR_PLLQEN
+            | PLLN << RCC_PLLCFGR_PLLN_Pos
+            | (PLLM - 1) << RCC_PLLCFGR_PLLM_Pos
+            | 3 << RCC_PLLCFGR_PLLSRC_Pos;
+    RCC->CR |= RCC_CR_PLLON;
+    while (!(RCC->CR & RCC_CR_PLLRDY)) {
+        // Wait for PLL to lock
+    }
+    const uint32_t sysclk_src = 3;
+
+    // Set divider for HCLK2 to 2 so f_HCLK2 = 32MHz
+    RCC->EXTCFGR = 8 << RCC_EXTCFGR_C2HPRE_Pos;
+
+    // Set flash latency to 3 because SYSCLK > 54MHz
+    FLASH->ACR |= 3 << FLASH_ACR_LATENCY_Pos;
+
+    // Select SYSCLK source
+    RCC->CFGR |= sysclk_src << RCC_CFGR_SW_Pos;
+    while (((RCC->CFGR >> RCC_CFGR_SWS_Pos) & 0x3) != sysclk_src) {
+        // Wait for SYSCLK source to change
+    }
+
+    // Select PLLQ as 48MHz source for USB and RNG
+    RCC->CCIPR = 2 << RCC_CCIPR_CLK48SEL_Pos;
+#endif
     SystemCoreClockUpdate();
     powerctrl_config_systick();
 
-    HAL_PWREx_EnableVddUSB();
 
 }
 
