@@ -441,9 +441,8 @@ bool uart_init(pyb_uart_obj_t *uart_obj,
     }
 
     uart_obj->uartx = UARTx;
-    
-    if(UARTx == LPUART1)
-    {
+
+    if (UARTx == LPUART1) {
 
         LL_LPUART_InitTypeDef LPUART_InitStruct = {0};
 
@@ -459,7 +458,7 @@ bool uart_init(pyb_uart_obj_t *uart_obj,
         PA3   ------> LPUART1_RX
         PA2   ------> LPUART1_TX
         */
-        GPIO_InitStruct.Pin = LL_GPIO_PIN_2|LL_GPIO_PIN_3;
+        GPIO_InitStruct.Pin = LL_GPIO_PIN_2 | LL_GPIO_PIN_3;
         GPIO_InitStruct.Mode = LL_GPIO_MODE_ALTERNATE;
         GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_HIGH;
         GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
@@ -482,13 +481,10 @@ bool uart_init(pyb_uart_obj_t *uart_obj,
         LL_LPUART_Enable(LPUART1);
 
         /* Polling LPUART1 initialisation */
-        while((!(LL_LPUART_IsActiveFlag_TEACK(LPUART1))) || (!(LL_LPUART_IsActiveFlag_REACK(LPUART1))))
-        {
+        while ((!(LL_LPUART_IsActiveFlag_TEACK(LPUART1))) || (!(LL_LPUART_IsActiveFlag_REACK(LPUART1)))) {
         }
 
-    }
-    else
-    {    
+    } else {
         uint32_t mode = MP_HAL_PIN_MODE_ALT;
         uint32_t pull = MP_HAL_PIN_PULL_UP;
 
@@ -742,11 +738,11 @@ uint32_t uart_get_baudrate(pyb_uart_obj_t *self) {
             break;
     }
     #elif defined(STM32WB)
-      if (self->uart_id == 1) {
+    if (self->uart_id == 1) {
         uart_clk = HAL_RCC_GetPCLK2Freq();
     } else {
         return LL_LPUART_GetBaudRate(LPUART1, HAL_RCC_GetPCLK1Freq(), LL_LPUART_PRESCALER_DIV4);
-    }  
+    }
     #else
     if (self->uart_id == 1
         #if defined(USART6)
