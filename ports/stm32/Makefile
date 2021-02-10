@@ -66,6 +66,7 @@ INC += -I$(CMSIS_DIR)/
 INC += -I$(TOP)/$(HAL_DIR)/Inc
 INC += -I$(USBDEV_DIR)/core/inc -I$(USBDEV_DIR)/class/inc
 INC += -I$(BOARD_DIR)
+INC += -I$(BOARD_DIR)/audio
 #INC += -I$(USBHOST_DIR)
 INC += -Ilwip_inc
 
@@ -344,7 +345,8 @@ SRC_C += \
 	servo.c \
 	dac.c \
 	adc.c \
-	$(wildcard $(BOARD_DIR)/*.c)
+	$(wildcard $(BOARD_DIR)/*.c)\
+	$(wildcard $(BOARD_DIR)/audio/*.c)
 
 SRC_CXX += \
 	$(SRC_MOD_CXX)
